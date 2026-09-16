@@ -1,1 +1,72 @@
-import { Readable } from "node:stream";\nimport worker from "../worker.js";\n\nexport const config = {\n  api: {\n    bodyParser: false,\n  },\n};\n\nfunction requestHeaders(incomingHeaders) {\n  const headers = new Headers();\n\n  for (const [name, value] of Object.entries(incomingHeaders)) {\n    if (Array.isArray(value)) {\n      for (const item of value) headers.append(name, item);\n    } else if (value !== undefined) {\n      headers.set(name, value);\n    }\n  }\n\n  return headers;\n}\n\nfunction responseHeaders(headers) {\n  const output = {};\n\n  headers.forEach((value, name) => {\n    // Node fetch transparently decompresses upstream responses.\n    // Remove stale metadata before sending the response to the browser.\n    if (!["content-encoding", "content-length", "transfer-encoding"].includes(name)) {\n      output[name] = value;\n    }\n  });\n\n  return output;\n}\n\nexport default async function handler(req, res) {\n  try {\n    const protocol = req.headers["x-forwarded-proto"]?.split(",")[0] || "https";\n    const host = req.headers.host || "localhost";\n    const method = req.method || "GET";\n    const hasBody = !["GET", "HEAD"].includes(method);\n\n    const request = new Request(`${protocol}://${host}${req.url || "/"}`, {\n      method,\n      headers: requestHeaders(req.headers),\n      body: hasBody ? req : undefined,\n      duplex: hasBody ? "half" : undefined,\n    });\n\n    const response = await worker.fetch(request);\n    res.statusCode = response.status;\n    res.setHeader("Cache-Control", "no-store");\n\n    for (const [name, value] of Object.entries(responseHeaders(response.headers))) {\n      res.setHeader(name, value);\n    }\n\n    if (!response.body) {\n      res.end();\n      return;\n    }\n\n    Readable.fromWeb(response.body).pipe(res);\n  } catch (error) {\n    console.error("Vercel request failed:", error);\n    if (!res.headersSent) {\n      res.statusCode = 500;\n      res.setHeader("Content-Type", "text/plain; charset=utf-8");\n    }\n    res.end("Internal Server Error");\n  }\n}\n
+import { Readable } from "node:stream";
+import worker from "../worker.js";
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+function requestHeaders(incomingHeaders) {
+  const headers = new Headers();
+
+  for (const [name, value] of Object.entries(incomingHeaders)) {
+    if (Array.isArray(value)) {
+      for (const item of value) headers.append(name, item);
+    } else if (value !== undefined) {
+      headers.set(name, value);
+    }
+  }
+
+  return headers;
+}
+
+function responseHeaders(headers) {
+  const output = {};
+
+  headers.forEach((value, name) => {
+    if (!["content-encoding", "content-length", "transfer-encoding"].includes(name)) {
+      output[name] = value;
+    }
+  });
+
+  return output;
+}
+
+export default async function handler(req, res) {
+  try {
+    const protocol = req.headers["x-forwarded-proto"]?.split(",")[0] || "https";
+    const host = req.headers.host || "localhost";
+    const method = req.method || "GET";
+    const hasBody = !["GET", "HEAD"].includes(method);
+
+    const request = new Request(`${protocol}://${host}${req.url || "/"}`, {
+      method,
+      headers: requestHeaders(req.headers),
+      body: hasBody ? req : undefined,
+      duplex: hasBody ? "half" : undefined,
+    });
+
+    const response = await worker.fetch(request);
+    res.statusCode = response.status;
+    res.setHeader("Cache-Control", "no-store");
+
+    for (const [name, value] of Object.entries(responseHeaders(response.headers))) {
+      res.setHeader(name, value);
+    }
+
+    if (!response.body) {
+      res.end();
+      return;
+    }
+
+    Readable.fromWeb(response.body).pipe(res);
+  } catch (error) {
+    console.error("Vercel request failed:", error);
+    if (!res.headersSent) {
+      res.statusCode = 500;
+      res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    }
+    res.end("Internal Server Error");
+  }
+}

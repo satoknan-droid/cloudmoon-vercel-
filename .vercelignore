@@ -1,1 +1,7 @@
-node_modules\n.git\n.env\n*.log\nwrangler.toml\nserver.mjs\n.replit\n
+node_modules
+.git
+.env
+*.log
+wrangler.toml
+server.mjs
+.replit
