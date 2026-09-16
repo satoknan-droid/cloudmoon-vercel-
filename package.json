@@ -1,27 +1,19 @@
 {
-  "name": "workspace",
+  "name": "cloudmoon-vercel",
   "version": "1.0.0",
-  "description": "![github_thum.png](github_thum.png)",
+  "description": "CloudMoon InPlay Vercel deployment",
   "main": "worker.js",
   "scripts": {
     "start": "PORT=3000 node server.mjs",
     "dev": "PORT=5000 node server.mjs",
-    "wrangler:dev": "wrangler dev --local --ip 0.0.0.0 --port 8787",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/satoknan-droid/Cloudmoon.git"
+    "url": "git+https://github.com/satoknan-droid/cloudmoon-vercel-.git"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "module",
-  "bugs": {
-    "url": "https://github.com/satoknan-droid/Cloudmoon/issues"
-  },
-  "homepage": "https://github.com/satoknan-droid/Cloudmoon#readme",
-  "dependencies": {
-    "wrangler": "^4.129.0"
-  }
+  "type": "module"
 }
