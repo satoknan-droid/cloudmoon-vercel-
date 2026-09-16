@@ -1,16 +1,15 @@
 {
-  "buildCommand": "npm install",
-  "env": {
-    "NODE_ENV": "production"
+  "version": 2,
+  "functions": {
+    "api/proxy.js": {
+      "runtime": "nodejs22.x",
+      "maxDuration": 60
+    }
   },
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/proxy"
+      "source": "/(.*)",
+      "destination": "/api/proxy"
     }
   ]
-}
+}\n
