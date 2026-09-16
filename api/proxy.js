@@ -33,14 +33,22 @@ function responseHeaders(headers) {
   return output;
 }
 
+function forwardedRequestUrl(req) {
+  const protocol = req.headers["x-forwarded-proto"]?.split(",")[0] || "https";
+  const host = req.headers.host || "localhost";
+  const incoming = new URL(req.url || "/", `${protocol}://${host}`);
+  const originalPath = incoming.searchParams.get("__vercel_path") || "/";
+  incoming.searchParams.delete("__vercel_path");
+  const query = incoming.searchParams.toString();
+  return `${protocol}://${host}${originalPath}${query ? `?${query}` : ""}`;
+}
+
 export default async function handler(req, res) {
   try {
-    const protocol = req.headers["x-forwarded-proto"]?.split(",")[0] || "https";
-    const host = req.headers.host || "localhost";
     const method = req.method || "GET";
     const hasBody = !["GET", "HEAD"].includes(method);
 
-    const request = new Request(`${protocol}://${host}${req.url || "/"}`, {
+    const request = new Request(forwardedRequestUrl(req), {
       method,
       headers: requestHeaders(req.headers),
       body: hasBody ? req : undefined,

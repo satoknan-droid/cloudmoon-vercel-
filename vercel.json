@@ -5,10 +5,10 @@
       "maxDuration": 60
     }
   },
-  "rewrites": [
+  "routes": [
     {
-      "source": "/(.*)",
-      "destination": "/api/proxy"
+      "src": "/(.*)",
+      "dest": "/api/proxy?__vercel_path=/$1"
     }
   ]
 }
