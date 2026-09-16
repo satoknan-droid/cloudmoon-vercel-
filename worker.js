@@ -574,7 +574,13 @@ function fixButtons() {
       });
     }
   }
-  return new Response(response.body, {
+  // Materialize upstream assets before returning them to the Node/Vercel adapter.
+  // This avoids empty bodies when compressed responses cross the runtime boundary.
+  const responseBody = await response.arrayBuffer();
+  newHeaders.delete("Content-Encoding");
+  newHeaders.delete("Content-Length");
+  newHeaders.delete("Transfer-Encoding");
+  return new Response(responseBody, {
     status: response.status,
     statusText: response.statusText,
     headers: newHeaders
