@@ -1,5 +1,3 @@
-import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
 import worker from "../worker.js";
 
 export const config = {
@@ -69,7 +67,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    await pipeline(Readable.fromWeb(response.body), res);
+    const body = Buffer.from(await response.arrayBuffer());
+    res.setHeader("Content-Length", body.byteLength);
+    res.end(body);
   } catch (error) {
     console.error("Vercel request failed:", error);
     if (!res.headersSent) {
